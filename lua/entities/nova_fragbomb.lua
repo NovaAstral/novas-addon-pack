@@ -82,11 +82,11 @@ function ENT:Explode()
 		
 
 		if(ModelRandNum == 1) then
-			GibEnt:SetModel("models/gibs/scanner_gib02.mdl")
+			GibEnt:SetModel("models/combine_helicopter/bomb_debris_1.mdl")
 		elseif(ModelRandNum == 2) then
-			GibEnt:SetModel("models/gibs/manhack_gib01.mdl")
+			GibEnt:SetModel("models/combine_helicopter/bomb_debris_2.mdl")
 		else
-			GibEnt:SetModel("models/gibs/manhack_gib04.mdl")
+			GibEnt:SetModel("models/combine_helicopter/bomb_debris_3.mdl")
 		end
 
 		GibEnt:PhysicsInit(SOLID_VPHYSICS)
