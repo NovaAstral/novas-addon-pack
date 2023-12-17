@@ -2,19 +2,19 @@ AddCSLuaFile()
 
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
-ENT.PrintName = "Bouncy Bomb"
+ENT.PrintName = "Targeted Fragmentation Bomb"
 ENT.Author = "Nova Astral"
 ENT.Category = "Novas Addon Pack"
 ENT.Contact	= "https://github.com/NovaAstral"
-ENT.Purpose	= "boing"
-ENT.Instructions = "bouncy"
+ENT.Purpose	= "kaboom"
+ENT.Instructions = "just explode it"
 
 ENT.Spawnable = true
 ENT.AdminSpawnable = true
 
 if CLIENT then
-	language.Add( "Cleanup_bouncy_bomb","Bouncy Bomb")
-	language.Add( "Cleanup_bouncy_bomb","Bouncy Bomb")
+	language.Add( "Cleanup_fragmentation_bomb","Targeted Fragmentation Bomb")
+	language.Add( "Cleanup_fragmentation_bomb","Targeted Fragmentation Bomb")
 
 	function ENT:Draw()
 		self:DrawEntityOutline(0.0)
@@ -25,7 +25,7 @@ if CLIENT then
 else
 
 function ENT:SpawnFunction(ply, tr)
-	local ent = ents.Create("nova_bouncybomb")
+	local ent = ents.Create("nova_targeted_frag_bomb")
 	ent:SetPos(tr.HitPos)
 	ent:SetVar("Owner",ply)
 	ent:Spawn()
@@ -51,7 +51,7 @@ function ENT:Initialize()
 	end
 
 	if(WireLib != nil) then
-		self.WireDebugName = "Fragmentation Bomb"
+		self.WireDebugName = "Targeted Fragmentation Bomb"
 
 		self.Inputs = WireLib.CreateSpecialInputs(self.Entity,{"Activate"},{"NORMAL"})
 	end
@@ -62,48 +62,66 @@ function ENT:Initialize()
 
 	self.Entity:SetSkin(1)
 
-	self.Bounces = 0
-    
-    self.Active = false
+	self.Timer = 0
+	self.MaxGibVel = 5000
+	self.MinGibVel = -5000
+
 	self.Exploded = false
 end
 
 function ENT:Use()
-	self:ActivateBomb()
-end
-
-function ENT:PhysicsCollide(data,collider)
-    local Phys = self.Entity:GetPhysicsObject()
-
-    if(Phys:IsValid() and self.Active) then
-        Phys:SetVelocity(Vector(math.random(-500,500),math.random(-500,500),math.random(-500,500)))
-
-        self.Bounces = self.Bounces+1
-
-        if(snd == 1) then
-			self.Entity:EmitSound("physics/metal/metal_barrel_impact_hard1.wav")
-		elseif(snd == 2) then
-			self.Entity:EmitSound("physics/metal/metal_barrel_impact_hard2.wav")
-		else
-			self.Entity:EmitSound("physics/metal/metal_barrel_impact_hard3.wav")
-		end
-
-		if(self.Entity:GetSkin() == 0) then
-			self.Entity:SetSkin(1)
-		else
-			self.Entity:SetSkin(0)
-		end
-
-        if(self.Bounces >= 10) then
-            self:Explode()
-        end
-    end
+	if(!timer.Exists("BombTimer"..self:EntIndex())) then
+		self:ActivateBomb()
+	end
 end
 
 function ENT:Explode()
+	local targets = ents.FindInSphere(self.Entity:GetPos(),500)
+
+	for k,v in pairs(targets) do
+		if(v:IsPlayer() or v:IsNPC()) then
+			local direction = (v:GetPos() - self.Entity:GetPos()):GetNormalized()
+			local GibEnt = ents.Create("prop_physics")
+			local ModelRandNum = math.random(1,3)
+			
+			if(ModelRandNum == 1) then
+				GibEnt:SetModel("models/combine_helicopter/bomb_debris_1.mdl")
+			elseif(ModelRandNum == 2) then
+				GibEnt:SetModel("models/combine_helicopter/bomb_debris_2.mdl")
+			else
+				GibEnt:SetModel("models/combine_helicopter/bomb_debris_3.mdl")
+			end
+
+			GibEnt:PhysicsInit(SOLID_VPHYSICS)
+			GibEnt:SetMoveType(MOVETYPE_VPHYSICS)
+			GibEnt:SetSolid(SOLID_VPHYSICS)
+
+			local Phys = GibEnt:GetPhysicsObject()
+
+			if(Phys:IsValid()) then
+				Phys:SetMass(100)
+				Phys:EnableGravity(true)
+				Phys:Wake()
+			end
+
+			GibEnt:SetCollisionGroup(COLLISION_GROUP_INTERACTIVE)
+			GibEnt:SetPos(self.Entity:GetPos())
+
+			if(IsValid(Phys)) then
+				Phys:SetVelocity(direction * 5000)
+			end
+			
+			timer.Simple(10,function()
+				if(IsValid(GibEnt)) then
+					GibEnt:Remove()
+				end
+			end)
+		end
+	end
+
 	self.Entity:EmitSound("phx/explode06.wav",80,100,1)
 
-	util.BlastDamage(self.Entity,self.Entity,self.Entity:GetPos(),500,200)
+	util.BlastDamage(self.Entity,self.Entity,self.Entity:GetPos(),250,100)
 	
 	local effectdata = EffectData()
 	effectdata:SetOrigin(self.Entity:GetPos())
@@ -115,13 +133,23 @@ function ENT:Explode()
 end
 
 function ENT:ActivateBomb()
-	self.Active = true
+	timer.Create("BombTimer"..self:EntIndex(),1,5,function()
+		self.Timer = self.Timer+1
 
-    local Phys = self.Entity:GetPhysicsObject()
+		if(IsValid(self.Entity)) then
+			self.Entity:EmitSound("weapons/c4/c4_click.wav")
 
-    if(Phys:IsValid()) then
-        Phys:SetVelocity(Vector(0,0,100))
-    end
+			if(self.Entity:GetSkin() == 0) then
+				self.Entity:SetSkin(1)
+			else
+				self.Entity:SetSkin(0)
+			end
+		end
+
+		if(self.Timer == 5) then
+			self:Explode()
+		end
+	end)
 end
 
 function ENT:OnTakeDamage(damage)
@@ -155,6 +183,10 @@ function ENT:PostEntityPaste(ply, ent, createdEnts)
 		if not emods then return end
 		WireLib.ApplyDupeInfo(ply, ent, emods.WireDupeInfo, function(id) return createdEnts[id] end)
 	end
+end
+
+function ENT:OnRemove()
+	timer.Remove("BombTimer"..self:EntIndex())
 end
 
 end

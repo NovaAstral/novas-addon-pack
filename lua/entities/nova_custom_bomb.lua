@@ -2,7 +2,7 @@ AddCSLuaFile()
 
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
-ENT.PrintName = "Fragmentation Bomb"
+ENT.PrintName = "Custom Fragmentation Bomb"
 ENT.Author = "Nova Astral"
 ENT.Category = "Novas Addon Pack"
 ENT.Contact	= "https://github.com/NovaAstral"
@@ -13,8 +13,8 @@ ENT.Spawnable = true
 ENT.AdminSpawnable = true
 
 if CLIENT then
-	language.Add( "Cleanup_fragmentation_bomb","Fragmentation Bomb")
-	language.Add( "Cleanup_fragmentation_bomb","Fragmentation Bomb")
+	language.Add( "Cleanup_custom_fragmentation_bomb","Custom Fragmentation Bomb")
+	language.Add( "Cleanup_custom_fragmentation_bomb","Custom Fragmentation Bomb")
 
 	function ENT:Draw()
 		self:DrawEntityOutline(0.0)
@@ -25,7 +25,7 @@ if CLIENT then
 else
 
 function ENT:SpawnFunction(ply, tr)
-	local ent = ents.Create("nova_fragbomb")
+	local ent = ents.Create("nova_custom_bomb")
 	ent:SetPos(tr.HitPos)
 	ent:SetVar("Owner",ply)
 	ent:Spawn()
@@ -51,7 +51,7 @@ function ENT:Initialize()
 	end
 
 	if(WireLib != nil) then
-		self.WireDebugName = "Fragmentation Bomb"
+		self.WireDebugName = "Custom Fragmentation Bomb"
 
 		self.Inputs = WireLib.CreateSpecialInputs(self.Entity,{"Activate"},{"NORMAL"})
 	end
@@ -79,15 +79,25 @@ function ENT:Explode()
 	for I = 1,20 do
 		local GibEnt = ents.Create("prop_physics")
 		local ModelRandNum = math.random(1,3)
-		
 
-		if(ModelRandNum == 1) then
-			GibEnt:SetModel("models/combine_helicopter/bomb_debris_1.mdl")
-		elseif(ModelRandNum == 2) then
-			GibEnt:SetModel("models/combine_helicopter/bomb_debris_2.mdl")
-		else
-			GibEnt:SetModel("models/combine_helicopter/bomb_debris_3.mdl")
-		end
+        local tr = util.TraceLine({
+            start = self.Entity:GetPos(),
+            endpos = self.Entity:GetPos() + Vector(0,0,-100),
+			filter = self.Entity
+        })
+        local hitent = tr.Entity
+
+        if(IsValid(hitent)) then
+            GibEnt:SetModel(hitent:GetModel())
+        else
+            if(ModelRandNum == 1) then
+                GibEnt:SetModel("models/combine_helicopter/bomb_debris_1.mdl")
+            elseif(ModelRandNum == 2) then
+                GibEnt:SetModel("models/combine_helicopter/bomb_debris_2.mdl")
+            else
+                GibEnt:SetModel("models/combine_helicopter/bomb_debris_3.mdl")
+            end
+        end
 
 		GibEnt:PhysicsInit(SOLID_VPHYSICS)
 		GibEnt:SetMoveType(MOVETYPE_VPHYSICS)
