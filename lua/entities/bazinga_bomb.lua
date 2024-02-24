@@ -2,19 +2,19 @@ AddCSLuaFile()
 
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
-ENT.PrintName = "Contact Bomb"
+ENT.PrintName = "Bazinga Bomb"
 ENT.Author = "Nova Astral"
 ENT.Category = "Novas Addon Pack"
 ENT.Contact	= "https://github.com/NovaAstral"
-ENT.Purpose	= "boing"
+ENT.Purpose	= "oh god"
 ENT.Instructions = "bouncy"
 
 ENT.Spawnable = true
 ENT.AdminSpawnable = true
 
 if CLIENT then
-	language.Add( "Cleanup_contact_bomb","Contact Bomb")
-	language.Add( "Cleanup_contact_bomb","Contact Bomb")
+	language.Add( "Cleanup_bazinga_bomb","Bazinga Bomb")
+	language.Add( "Cleanup_bazinga_bomb","Bazinga Bomb")
 
 	function ENT:Draw()
 		self:DrawEntityOutline(0.0)
@@ -25,7 +25,7 @@ if CLIENT then
 else
 
 function ENT:SpawnFunction(ply, tr)
-	local ent = ents.Create("nova_contact_bomb")
+	local ent = ents.Create("bazinga_bomb")
 	ent:SetPos(tr.HitPos)
 	ent:SetVar("Owner",ply)
 	ent:Spawn()
@@ -51,7 +51,7 @@ function ENT:Initialize()
 	end
 
 	if(WireLib != nil) then
-		self.WireDebugName = "Fragmentation Bomb"
+		self.WireDebugName = "Bazinga Bomb"
 
 		self.Inputs = WireLib.CreateSpecialInputs(self.Entity,{"Activate"},{"NORMAL"})
 	end
@@ -64,6 +64,9 @@ function ENT:Initialize()
     
     self.Active = false
 	self.Exploded = false
+
+    self.MaxGibVel = 5000
+	self.MinGibVel = -5000
 end
 
 function ENT:Use()
@@ -79,11 +82,33 @@ function ENT:PhysicsCollide(data,collider)
 end
 
 function ENT:Explode()
-	if(self.Bazinga == true) then
-		self.Entity:EmitSound("bazinga.mp3",511,100,1)
-	else
-		self.Entity:EmitSound("phx/explode06.wav",80,100,1)
-	end
+    for I = 1,2 do
+        local GibEnt = ents.Create("bazinga_bomb")
+		GibEnt:Initialize()
+
+		local Phys = GibEnt:GetPhysicsObject()
+
+		GibEnt:SetCollisionGroup(COLLISION_GROUP_INTERACTIVE)
+		GibEnt:SetPos(self.Entity:GetPos())
+
+		if(IsValid(Phys)) then
+			Phys:SetVelocity(VectorRand(self.MinGibVel,self.MaxGibVel))
+		end
+
+        timer.Simple(0.01,function()
+            if(IsValid(GibEnt)) then
+                GibEnt:ActivateBomb()
+            end
+        end)
+
+		timer.Simple(10,function()
+			if(IsValid(GibEnt)) then
+				GibEnt:Remove()
+			end
+		end)
+    end
+
+	self.Entity:EmitSound("bazinga.mp3",511,100,1)
 
 	util.BlastDamage(self.Entity,self.Entity,self.Entity:GetPos(),500,200)
 	
