@@ -22,14 +22,21 @@ if CLIENT then
 	end
 
 	function ENT:DrawEntityOutline() return	end
-else
+else --SERVER
 
 function ENT:SpawnFunction(ply, tr)
+	if(!ply:IsAdmin()) then
+		ply:SendLua("GAMEMODE:AddNotify(\"Only Admins can spawn this!\", NOTIFY_ERROR, 8); surface.PlaySound( \"buttons/button2.wav\" )")
+		return
+	end
+	
 	local ent = ents.Create("bazinga_bomb")
 	ent:SetPos(tr.HitPos)
 	ent:SetVar("Owner",ply)
 	ent:Spawn()
-	return ent 
+	ply:SendLua("GAMEMODE:AddNotify(\"This will crash the server very quickly when activated!\", NOTIFY_ERROR, 8); surface.PlaySound( \"buttons/button2.wav\" )")
+
+	return ent
 end
 
 function ENT:Initialize()

@@ -72,7 +72,7 @@ if(CLIENT)then
 	local matScreen = Material("models/weapons/v_toolgun/screen")
     local rtTexture = GetRenderTarget("GModToolgunScreen",256,256)
 
-    surface.CreateFont("TFBridgeController",{
+    surface.CreateFont("AirStrikeFont",{
         font = "Helvetica",
         size = 40,
         weight = 900
@@ -83,18 +83,19 @@ if(CLIENT)then
 
         local oldRT = render.GetRenderTarget()
 
-        render.PushRenderTarget(rtTexture,0,0,256,256)
+        render.SetViewPort(0,0,ScrW(),ScrH())
+        render.PushRenderTarget(rtTexture)
 
         cam.Start2D()
             surface.SetDrawColor(Color(100,100,100))
             surface.DrawRect(0,0,256,256)
-            self:drawShadowedText("Airstrike",128,110,"TFBridgeController")
-            self:drawShadowedText("Caller",128,145,"TFBridgeController")
+            self:drawShadowedText("Air Strike",128,110,"AirStrikeFont")
+            self:drawShadowedText("Caller",128,145,"AirStrikeFont")
         cam.End2D()
 
+        render.SetRenderTarget(oldRT)
+        render.SetViewPort(0,0,ScrW(),ScrH())
         render.PopRenderTarget()
-        render.PushRenderTarget(oldRT,0,0,ScrW(),ScrH())
-        
     end
 
     function SWEP:drawShadowedText(text, x, y, font)

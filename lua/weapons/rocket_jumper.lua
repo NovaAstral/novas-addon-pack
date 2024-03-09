@@ -35,8 +35,7 @@ end
 
 if SERVER then
 	function SWEP:PrimaryAttack()
-        self:SetNextPrimaryFire(CurTime()+1)
-        self:SetNextSecondaryFire(CurTime()+1)
+        self:SetNextPrimaryFire(CurTime()+0.8)
 
 		local ply = self:GetOwner()
 
@@ -62,7 +61,7 @@ if(CLIENT)then
 	local matScreen = Material("models/weapons/v_toolgun/screen")
     local rtTexture = GetRenderTarget("GModToolgunScreen",256,256)
 
-    surface.CreateFont("TFBridgeController",{
+    surface.CreateFont("RJumper",{
         font = "Helvetica",
         size = 40,
         weight = 900
@@ -73,18 +72,19 @@ if(CLIENT)then
 
         local oldRT = render.GetRenderTarget()
 
-        render.PushRenderTarget(rtTexture,0,0,256,256)
+        render.SetViewPort(0,0,ScrW(),ScrH())
+        render.PushRenderTarget(rtTexture)
 
         cam.Start2D()
             surface.SetDrawColor(Color(100,100,100))
             surface.DrawRect(0,0,256,256)
-            self:drawShadowedText("Rocket",128,110,"TFBridgeController")
-            self:drawShadowedText("Jumper",128,145,"TFBridgeController")
+            self:drawShadowedText("Rocket",128,110,"RJumper")
+            self:drawShadowedText("Jumper",128,145,"RJumper")
         cam.End2D()
 
+        render.SetRenderTarget(oldRT)
+        render.SetViewPort(0,0,ScrW(),ScrH())
         render.PopRenderTarget()
-        render.PushRenderTarget(oldRT,0,0,ScrW(),ScrH())
-        
     end
 
     function SWEP:drawShadowedText(text, x, y, font)
