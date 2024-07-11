@@ -58,39 +58,4 @@ if SERVER then
     end
 end
 
-if(CLIENT)then
-	local matScreen = Material("models/weapons/v_toolgun/screen")
-    local rtTexture = GetRenderTarget("GModToolgunScreen",256,256)
-
-    surface.CreateFont("TFBridgeController",{
-        font = "Helvetica",
-        size = 40,
-        weight = 900
-    })
-
-    function SWEP:RenderScreen()
-        matScreen:SetTexture("$basetexture",rtTexture)
-
-        local oldRT = render.GetRenderTarget()
-
-        render.PushRenderTarget(rtTexture,0,0,256,256)
-
-        cam.Start2D()
-            surface.SetDrawColor(Color(100,100,100))
-            surface.DrawRect(0,0,256,256)
-            self:drawShadowedText("Recoil",128,110,"TFBridgeController")
-            self:drawShadowedText("Gun",128,145,"TFBridgeController")
-        cam.End2D()
-
-        render.PopRenderTarget()
-        render.PushRenderTarget(oldRT,0,0,ScrW(),ScrH())
-        
-    end
-
-    function SWEP:drawShadowedText(text, x, y, font)
-        draw.SimpleText( text, font, x + 3, y + 3, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-        draw.SimpleText( text, font, x , y , Color(255, 255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    end
-end
-
 timer.Simple(0.1, function() weapons.Register(SWEP,"recoil_gun", true) end) --Putting this in a timer stops bugs from happening if the weapon is given while the game is paused

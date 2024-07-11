@@ -25,6 +25,11 @@ if CLIENT then
 else
 
 function ENT:SpawnFunction(ply, tr)
+	if(!ply:IsAdmin()) then
+		ply:SendLua("GAMEMODE:AddNotify(\"Only Admins can spawn this!\", NOTIFY_ERROR, 8); surface.PlaySound( \"buttons/button2.wav\" )")
+		return
+	end
+	
 	local ent = ents.Create("the_big_bazinga")
 	ent:SetPos(tr.HitPos)
 	ent:SetVar("Owner",ply)
