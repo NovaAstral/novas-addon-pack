@@ -1,10 +1,10 @@
 if SERVER then
     hook.Add("EntityTakeDamage","nova_safezone_damagecheck",function(ent,dmg)
-        attacker = dmg:GetAttacker()
-
-        if(IsValid(ent)) then
+        if(IsValid(ent) and IsValid(dmg)) then
+            attacker = dmg:GetAttacker()
+                
             for k,v in ents.Iterator() do
-                if(v:GetClass() == "nova_safezone") then
+                if(IsValid(v) and v:GetClass() == "nova_safezone") then
                     if(ent:GetPos():Distance(v:GetPos()) <= v.Radius) then
                         dmg:SetDamage(0)
                         return true --block damage event
@@ -42,7 +42,7 @@ if CLIENT then
         plypos = LocalPlayer():GetPos()
 
         for k,v in ents.Iterator() do
-            if(v:GetClass() == "nova_safezone") then
+            if(IsValid(v) and v:GetClass() == "nova_safezone") then
                 if(plypos:Distance(v:GetPos()) <= v:GetNWInt("Radius",500)) then
                     Counter = Counter+1
                 end
