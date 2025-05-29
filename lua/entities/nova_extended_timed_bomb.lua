@@ -2,7 +2,7 @@ AddCSLuaFile()
 
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
-ENT.PrintName = "Targeted Fragmentation Bomb"
+ENT.PrintName = "Extended Time Bomb"
 ENT.Author = "Nova Astral"
 ENT.Category = "Novas Addon Pack"
 ENT.Contact	= "https://github.com/NovaAstral"
@@ -20,7 +20,7 @@ if CLIENT then
 	function ENT:DrawEntityOutline() return	end
 else
 	function ENT:SpawnFunction(ply, tr)
-		local ent = ents.Create("nova_targeted_frag_bomb")
+		local ent = ents.Create("nova_extended_timed_bomb")
 		ent:SetPos(tr.HitPos)
 		ent:SetVar("Owner",ply)
 		ent:Spawn()
@@ -46,7 +46,7 @@ else
 		end
 
 		if(WireLib != nil) then
-			self.WireDebugName = "Targeted Fragmentation Bomb"
+			self.WireDebugName = "Timed Bomb"
 
 			self.Inputs = WireLib.CreateSpecialInputs(self.Entity,{"Activate"},{"NORMAL"})
 		end
@@ -58,8 +58,7 @@ else
 		self.Entity:SetSkin(1)
 
 		self.Timer = 0
-		self.MaxGibVel = 5000
-		self.MinGibVel = -5000
+		self.ExplodeTime = 300 --how long it takes to explode in seconds
 
 		self.Exploded = false
 	end
@@ -71,49 +70,6 @@ else
 	end
 
 	function ENT:Explode()
-		local targets = ents.FindInSphere(self.Entity:GetPos(),500)
-
-		for k,v in pairs(targets) do
-			if(v:IsPlayer() or v:IsNPC()) then
-				local direction = (v:GetPos() - self.Entity:GetPos()):GetNormalized()
-				local GibEnt = ents.Create("prop_physics")
-				local ModelRandNum = math.random(1,3)
-				
-				if(ModelRandNum == 1) then
-					GibEnt:SetModel("models/combine_helicopter/bomb_debris_1.mdl")
-				elseif(ModelRandNum == 2) then
-					GibEnt:SetModel("models/combine_helicopter/bomb_debris_2.mdl")
-				else
-					GibEnt:SetModel("models/combine_helicopter/bomb_debris_3.mdl")
-				end
-
-				GibEnt:PhysicsInit(SOLID_VPHYSICS)
-				GibEnt:SetMoveType(MOVETYPE_VPHYSICS)
-				GibEnt:SetSolid(SOLID_VPHYSICS)
-
-				local Phys = GibEnt:GetPhysicsObject()
-
-				if(Phys:IsValid()) then
-					Phys:SetMass(100)
-					Phys:EnableGravity(true)
-					Phys:Wake()
-				end
-
-				GibEnt:SetCollisionGroup(COLLISION_GROUP_INTERACTIVE)
-				GibEnt:SetPos(self.Entity:GetPos())
-
-				if(IsValid(Phys)) then
-					Phys:SetVelocity(direction * 5000)
-				end
-				
-				timer.Simple(10,function()
-					if(IsValid(GibEnt)) then
-						GibEnt:Remove()
-					end
-				end)
-			end
-		end
-
 		self.Entity:EmitSound("phx/explode06.wav",80,100,1)
 
 		util.BlastDamage(self.Entity,self.Entity,self.Entity:GetPos(),250,100)
@@ -128,7 +84,7 @@ else
 	end
 
 	function ENT:ActivateBomb()
-		timer.Create("BombTimer"..self:EntIndex(),1,5,function()
+		timer.Create("BombTimer"..self:EntIndex(),1,self.ExplodeTime,function()
 			self.Timer = self.Timer+1
 
 			if(IsValid(self.Entity)) then
@@ -141,7 +97,7 @@ else
 				end
 			end
 
-			if(self.Timer == 5) then
+			if(self.Timer == self.ExplodeTime) then
 				self:Explode()
 			end
 		end)

@@ -37,7 +37,7 @@ if CLIENT then
         outline = true,
     })
 
-    hook.Add("Think", "nova_safezone_hud_think",function() --doesnt work properly if more than 1 safezone, will only show hud around the last safezone spawned
+    hook.Add("Think", "nova_safezone_hud_think",function()
         Counter = 0
         plypos = LocalPlayer():GetPos()
 

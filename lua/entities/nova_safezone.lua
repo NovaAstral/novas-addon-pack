@@ -10,12 +10,8 @@ ENT.Purpose	= "Being safe"
 ENT.Instructions = "Press E on it when you're admin"
 
 ENT.Spawnable = true
-ENT.AdminSpawnable = true
 
 if CLIENT then
-    language.Add( "Cleanup_safe_zone", "Cleanup Safe Zone")
-    language.Add( "Cleaned_safe_zone", "Cleaned up Safe Zone")
-    
     function ENT:Draw()
        self:DrawEntityOutline( 0.0 )
        self.Entity:DrawModel()	
@@ -103,56 +99,61 @@ if CLIENT then
 		end)
 	end
 else --server
-
-function ENT:SpawnFunction(ply, tr)
-	if(!ply:IsSuperAdmin()) then
-		ply:SendLua("GAMEMODE:AddNotify(\"Only SuperAdmins can spawn this!\", NOTIFY_ERROR, 8); surface.PlaySound( \"buttons/button2.wav\" )")
-		return
-	end
-
-	local ent = ents.Create("nova_safezone")
-	ent:SetPos(tr.HitPos + Vector(0, 0, 0))
-	ent:SetVar("Owner",ply)
-	ent:Spawn()
-	return ent 
-end
-
-function ENT:Initialize()
-	self.Entity:SetModel("models/props_lab/huladoll.mdl")
-	
-	--self.Entity:PhysicsInit(SOLID_NONE)
-
-	self.Entity:PhysicsInit(SOLID_VPHYSICS)
-	--self.Entity:SetMoveType(MOVETYPE_NONE)
-	self.Entity:SetSolid(SOLID_VPHYSICS)
-	--self.Entity:SetCollisionGroup(COLLISION_GROUP_WORLD)
-		
-	self.Entity:DrawShadow(false)
-	self.Entity:SetUseType(SIMPLE_USE)
-
-	self.Radius = 500
-
-	self.Entity:SetNWInt("Radius",self.Radius)
-
-	util.AddNetworkString("nova_safezone_radius_hud_activate_net")
-	util.AddNetworkString("nova_safezone_radius_net")
-
-	net.Receive("nova_safezone_radius_net",function(len,ply)
-		local radius = net.ReadInt(17)
-	
-		if(ply:IsSuperAdmin() or ply:ISAdmin() and radius > 0 and radius < 65535) then
-			self.Radius = radius
-			self.Entity:SetNWInt("Radius",radius)
+	function ENT:SpawnFunction(ply, tr)
+		if(!ply:IsSuperAdmin()) then
+			ply:SendLua("GAMEMODE:AddNotify(\"Only SuperAdmins can spawn this!\", NOTIFY_ERROR, 8); surface.PlaySound( \"buttons/button2.wav\" )")
+			return
 		end
-	end)
-end
 
-function ENT:Use(ply)
-	if(ply:IsSuperAdmin()) then
-		net.Start("nova_safezone_radius_hud_activate_net")
-			net.WriteEntity(ply)
-		net.Send(ply)
+		local ent = ents.Create("nova_safezone")
+		ent:SetPos(tr.HitPos + Vector(0, 0, 0))
+		ent:SetVar("Owner",ply)
+		ent:Spawn()
+		return ent 
 	end
-end
 
+	function ENT:Initialize()
+		self.Entity:SetModel("models/props_lab/huladoll.mdl")
+		
+		--self.Entity:PhysicsInit(SOLID_NONE)
+
+		self.Entity:PhysicsInit(SOLID_VPHYSICS)
+		--self.Entity:SetMoveType(MOVETYPE_NONE)
+		self.Entity:SetSolid(SOLID_VPHYSICS)
+		--self.Entity:SetCollisionGroup(COLLISION_GROUP_WORLD)
+			
+		self.Entity:DrawShadow(false)
+		self.Entity:SetUseType(SIMPLE_USE)
+
+		self.Radius = 500
+
+		self.Entity:SetNWInt("Radius",self.Radius)
+
+		util.AddNetworkString("nova_safezone_radius_hud_activate_net")
+		util.AddNetworkString("nova_safezone_radius_net")
+
+		net.Receive("nova_safezone_radius_net",function(len,ply)
+			local radius = net.ReadInt(17)
+		
+			if(ply:IsSuperAdmin() or ply:ISAdmin() and radius > 0 and radius < 65535) then
+				self.Radius = radius
+				self.Entity:SetNWInt("Radius",radius)
+			end
+		end)
+	end
+
+	function ENT:Think()
+		--if noenter enabled then
+		--find in sphere the radius for players
+		--if player is not admin then push them out (maybe tp them instead, get get their directional vectror from the sz ent, and then multiply the radius)
+		--(if push, use the knockback bomb code)
+	end
+
+	function ENT:Use(ply)
+		if(ply:IsSuperAdmin()) then
+			net.Start("nova_safezone_radius_hud_activate_net")
+				net.WriteEntity(ply)
+			net.Send(ply)
+		end
+	end
 end --end server

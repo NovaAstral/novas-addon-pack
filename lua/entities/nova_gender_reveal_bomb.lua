@@ -2,7 +2,7 @@ AddCSLuaFile()
 
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
-ENT.PrintName = "Targeted Fragmentation Bomb"
+ENT.PrintName = "Gender Reveal Bomb"
 ENT.Author = "Nova Astral"
 ENT.Category = "Novas Addon Pack"
 ENT.Contact	= "https://github.com/NovaAstral"
@@ -20,7 +20,7 @@ if CLIENT then
 	function ENT:DrawEntityOutline() return	end
 else
 	function ENT:SpawnFunction(ply, tr)
-		local ent = ents.Create("nova_targeted_frag_bomb")
+		local ent = ents.Create("nova_gender_reveal_bomb")
 		ent:SetPos(tr.HitPos)
 		ent:SetVar("Owner",ply)
 		ent:Spawn()
@@ -28,8 +28,8 @@ else
 	end
 
 	function ENT:Initialize()
-		util.PrecacheModel("models/Combine_Helicopter/helicopter_bomb01.mdl")
-		self.Entity:SetModel("models/Combine_Helicopter/helicopter_bomb01.mdl")
+		util.PrecacheModel("models/props_pipes/concrete_pipe001a.mdl")
+		self.Entity:SetModel("models/props_pipes/concrete_pipe001a.mdl")
 		
 		self.Entity:PhysicsInit(SOLID_VPHYSICS)
 		self.Entity:SetMoveType(MOVETYPE_VPHYSICS)
@@ -39,6 +39,8 @@ else
 			
 		local phys = self.Entity:GetPhysicsObject()
 
+		self.Entity:SetModelScale(0.2,0.001)
+
 		if(phys:IsValid()) then
 			phys:SetMass(100)
 			phys:EnableGravity(true)
@@ -46,7 +48,7 @@ else
 		end
 
 		if(WireLib != nil) then
-			self.WireDebugName = "Targeted Fragmentation Bomb"
+			self.WireDebugName = "Gender Reveal Bomb"
 
 			self.Inputs = WireLib.CreateSpecialInputs(self.Entity,{"Activate"},{"NORMAL"})
 		end
@@ -58,8 +60,9 @@ else
 		self.Entity:SetSkin(1)
 
 		self.Timer = 0
-		self.MaxGibVel = 5000
-		self.MinGibVel = -5000
+		self.ExplodeTime = 5 --how long it takes to explode in seconds
+		self.MaxGibVel = 2000
+		self.MinGibVel = -2000
 
 		self.Exploded = false
 	end
@@ -71,47 +74,50 @@ else
 	end
 
 	function ENT:Explode()
-		local targets = ents.FindInSphere(self.Entity:GetPos(),500)
-
-		for k,v in pairs(targets) do
-			if(v:IsPlayer() or v:IsNPC()) then
-				local direction = (v:GetPos() - self.Entity:GetPos()):GetNormalized()
-				local GibEnt = ents.Create("prop_physics")
-				local ModelRandNum = math.random(1,3)
-				
-				if(ModelRandNum == 1) then
-					GibEnt:SetModel("models/combine_helicopter/bomb_debris_1.mdl")
-				elseif(ModelRandNum == 2) then
-					GibEnt:SetModel("models/combine_helicopter/bomb_debris_2.mdl")
-				else
-					GibEnt:SetModel("models/combine_helicopter/bomb_debris_3.mdl")
-				end
-
-				GibEnt:PhysicsInit(SOLID_VPHYSICS)
-				GibEnt:SetMoveType(MOVETYPE_VPHYSICS)
-				GibEnt:SetSolid(SOLID_VPHYSICS)
-
-				local Phys = GibEnt:GetPhysicsObject()
-
-				if(Phys:IsValid()) then
-					Phys:SetMass(100)
-					Phys:EnableGravity(true)
-					Phys:Wake()
-				end
-
-				GibEnt:SetCollisionGroup(COLLISION_GROUP_INTERACTIVE)
-				GibEnt:SetPos(self.Entity:GetPos())
-
-				if(IsValid(Phys)) then
-					Phys:SetVelocity(direction * 5000)
-				end
-				
-				timer.Simple(10,function()
-					if(IsValid(GibEnt)) then
-						GibEnt:Remove()
-					end
-				end)
+		local colorRand = math.random(1,2)
+		
+		for I = 1,20 do
+			local GibEnt = ents.Create("prop_physics")
+			local ModelRandNum = math.random(1,3)
+			
+			if(ModelRandNum == 1) then
+				GibEnt:SetModel("models/combine_helicopter/bomb_debris_1.mdl")
+			elseif(ModelRandNum == 2) then
+				GibEnt:SetModel("models/combine_helicopter/bomb_debris_2.mdl")
+			else
+				GibEnt:SetModel("models/combine_helicopter/bomb_debris_3.mdl")
 			end
+
+			if(colorRand == 1) then
+				GibEnt:SetColor(Color(100,100,255,255))
+			else
+				GibEnt:SetColor(Color(255,100,200))
+			end
+
+			GibEnt:PhysicsInit(SOLID_VPHYSICS)
+			GibEnt:SetMoveType(MOVETYPE_VPHYSICS)
+			GibEnt:SetSolid(SOLID_VPHYSICS)
+
+			local Phys = GibEnt:GetPhysicsObject()
+
+			if(Phys:IsValid()) then
+				Phys:SetMass(100)
+				Phys:EnableGravity(true)
+				Phys:Wake()
+			end
+
+			GibEnt:SetCollisionGroup(COLLISION_GROUP_INTERACTIVE)
+			GibEnt:SetPos(self.Entity:GetPos())
+
+			if(IsValid(Phys)) then
+				Phys:SetVelocity(VectorRand(self.MinGibVel,self.MaxGibVel))
+			end
+
+			timer.Simple(10,function()
+				if(IsValid(GibEnt)) then
+					GibEnt:Remove()
+				end
+			end)
 		end
 
 		self.Entity:EmitSound("phx/explode06.wav",80,100,1)
@@ -124,6 +130,12 @@ else
 		effectdata:SetScale(20)
 		util.Effect("HelicopterMegaBomb", effectdata)
 
+		--local nearestply = 
+		--make this say the nearest player
+		for k,ply in ipairs(player.GetAll()) do
+			--ply:ChatPrint("Nova Astral's Grandparent has been killed in a Gender Reveal accident")
+		end
+
 		self.Entity:Remove()
 	end
 
@@ -133,15 +145,9 @@ else
 
 			if(IsValid(self.Entity)) then
 				self.Entity:EmitSound("weapons/c4/c4_click.wav")
-
-				if(self.Entity:GetSkin() == 0) then
-					self.Entity:SetSkin(1)
-				else
-					self.Entity:SetSkin(0)
-				end
 			end
 
-			if(self.Timer == 5) then
+			if(self.Timer == self.ExplodeTime) then
 				self:Explode()
 			end
 		end)
