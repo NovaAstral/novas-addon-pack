@@ -57,7 +57,6 @@ if SERVER then
 
         if(IsValid(trent)) then
             self:SetNextPrimaryFire(CurTime()+10)
-
         end
         
 	end
