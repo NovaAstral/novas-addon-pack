@@ -2,7 +2,7 @@ AddCSLuaFile()
 
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
-ENT.PrintName = "Knockback Bomb"
+ENT.PrintName = "Incendiary Bomb"
 ENT.Author = "Nova Astral"
 ENT.Category = "Novas Addon Pack"
 ENT.Contact	= "https://github.com/NovaAstral"
@@ -20,7 +20,7 @@ if CLIENT then
 	function ENT:DrawEntityOutline() return	end
 else
 	function ENT:SpawnFunction(ply, tr)
-		local ent = ents.Create("nova_knockback_bomb")
+		local ent = ents.Create("nova_incendiary_bomb")
 		ent:SetPos(tr.HitPos)
 		ent:SetVar("Owner",ply)
 		ent:Spawn()
@@ -46,7 +46,7 @@ else
 		end
 
 		if(WireLib != nil) then
-			self.WireDebugName = "Knockback Bomb"
+			self.WireDebugName = "Incendiary Bomb"
 
 			self.Inputs = WireLib.CreateSpecialInputs(self.Entity,{"Activate"},{"NORMAL"})
 		end
@@ -77,16 +77,10 @@ else
 		effectdata:SetScale(20)
 		util.Effect("HelicopterMegaBomb", effectdata)
 
-		local targets = ents.FindInSphere(self.Entity:GetPos(),500)
+		local targets = ents.FindInSphere(self.Entity:GetPos(),250)
 
 		for k,v in pairs(targets) do
-			local direction = (v:GetPos() - self.Entity:GetPos()):GetNormalized()
-
-			if(v:IsPlayer()) then
-				v:SetVelocity(direction * 5000)
-			elseif(IsValid(v:GetPhysicsObject())) then
-				v:GetPhysicsObject():AddVelocity(direction * 5000)
-			end
+			v:Ignite(10,25)
 		end
 
 
